@@ -1,0 +1,41 @@
+{
+    "name": "yejune/simpleue",
+    "description": "Php package to manage queue tasks in a simple way",
+    "keywords": ["queue", "task", "job", "redis", "sqs"],
+    "homepage": "http://github.com/yejune/simpleue",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+      {
+        "name": "Javier Bravo",
+        "homepage": "http://github.com/javibravo/simpleue",
+        "email": "javibravo85@gmail.com"
+      },
+      {
+        "name": "max",
+        "homepage": "http://github.com/yejune/simpleue",
+        "email": "k@yejune.com"
+      }
+    ],
+    "require": {
+        "php": ">=5.5",
+        "psr/log": "~1.0"
+    },
+    "autoload": {
+        "psr-4": {"Simpleue\\": "src/Simpleue"}
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.0.*",
+        "predis/predis": "^1.0",
+        "aws/aws-sdk-php": "^3.9",
+        "pda/pheanstalk": "^3.1"
+    },
+    "autoload-dev": {
+        "psr-4": {"Simpleue\\": "tests/Simpleue"}
+    },
+    "suggest": {
+        "predis/predis": "Allow work with Redis queues",
+        "aws/aws-sdk-php": "Allow work with AWS Simple Queue Service (SQS) queues",
+        "pda/pheanstalk": "Allow work with Beanstalkd queues"
+    }
+}
