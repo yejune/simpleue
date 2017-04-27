@@ -2,14 +2,14 @@
 
 <phpunit bootstrap="vendor/autoload.php" colors="true">
     <testsuites>
-        <testsuite name="SimplePhpQueue Test Suite">
+        <testsuite name="Simpleue Test Suite">
             <directory>tests/</directory>
         </testsuite>
     </testsuites>
 
     <filter>
         <whitelist>
-            <directory suffix=".php">src/SimplePhpQueue/</directory>
+            <directory suffix=".php">src/Simpleue/</directory>
         </whitelist>
     </filter>
 

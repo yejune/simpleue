@@ -136,7 +136,9 @@ class SqsQueue implements Queue
     protected function getQueueUrl($queueName)
     {
         try {
-            $queueData = $this->sqsClient->createQueue(['QueueName' => $queueName]);
+            $queueData = $this->sqsClient->createQueue([
+                'QueueName' => $queueName,
+            ]);
         } catch (SqsException $ex) {
             throw $ex;
         }
