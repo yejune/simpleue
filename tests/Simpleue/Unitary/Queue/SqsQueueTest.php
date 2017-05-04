@@ -18,7 +18,10 @@ class SqsQueueTest extends \PHPUnit_Framework_TestCase
         $this->sqsClientMock = $this->getMockBuilder('Aws\Sqs\SqsClient')->disableOriginalConstructor()
             ->setMethods(['receiveMessage', 'createQueue', 'deleteMessage', 'sendMessage'])->getMock();
         $this->sqsClientMock->expects($this->any())->method('createQueue')->willReturn(new Result(['QueueUrl' => 'queue-url-test']));
-        $this->sqsQueue = new SqsQueue($this->sqsClientMock, 'queue-test', 20);
+        $this->sqsQueue = new SqsQueue((new \Aws\Sdk([
+            'region'       => 'ap-northeast-2',
+            'version'      => 'latest',
+        ])), 'queue-test', 20);
         $this->sqsQueue->setSourceQueueUrl('queue-url-source');
         $this->sqsQueue->setErrorQueueUrl('queue-url-error');
         $this->sqsQueue->setFailedQueueUrl('queue-url-failed');

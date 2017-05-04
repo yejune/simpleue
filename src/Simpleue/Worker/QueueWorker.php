@@ -19,11 +19,11 @@ class QueueWorker
 
     public function __construct(Queue $queueHandler, Job $jobHandler, $maxIterations = false)
     {
-        $this->queueHandler = $queueHandler;
-        $this->jobHandler = $jobHandler;
+        $this->queueHandler  = $queueHandler;
+        $this->jobHandler    = $jobHandler;
         $this->maxIterations = (int) $maxIterations;
-        $this->iterations = 0;
-        $this->logger = false;
+        $this->iterations    = 0;
+        $this->logger        = false;
     }
 
     public function setQueueHandler(Queue $queueHandler)
@@ -63,6 +63,7 @@ class QueueWorker
             ++$this->iterations;
             try {
                 $job = $this->queueHandler->getNext();
+                $this->log('debug', 'get Next'.$this->queueHandler->toString($job));
             } catch (\Exception $exception) {
                 $this->log('error', 'Error getting data. Message: '.$exception->getMessage());
                 $this->queueHandler->error(false, $exception);
@@ -89,6 +90,7 @@ class QueueWorker
         if ($this->logger) {
             $this->logger->$type($message);
         }
+        echo $message.PHP_EOL;
     }
 
     protected function starting()
@@ -110,6 +112,11 @@ class QueueWorker
         return $job !== false;
     }
 
+    protected function finished()
+    {
+        return true;
+    }
+
     private function manageJob($job)
     {
         try {
@@ -123,12 +130,7 @@ class QueueWorker
             }
         } catch (\Exception $exception) {
             $this->log('error', 'Error Managing data. Data :'.$this->queueHandler->toString($job).'. Message: '.$exception->getMessage());
-            $this->queueHandler->error($job, $exception);
+            $this->queueHandler->error($job, $exception->getMessage());
         }
-    }
-
-    protected function finished()
-    {
-        return true;
     }
 }

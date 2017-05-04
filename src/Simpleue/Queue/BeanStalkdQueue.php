@@ -1,5 +1,4 @@
 <?php
-
 namespace Simpleue\Queue;
 
 use Pheanstalk\Job;
@@ -24,17 +23,10 @@ class BeanStalkdQueue implements Queue
         $this->setQueues($queueName);
     }
 
-
-    protected function setQueues($queueName)
-    {
-        $this->sourceQueue = $queueName;
-        $this->failedQueue = $queueName . '-failed';
-        $this->errorQueue = $queueName . '-error';
-    }
-
     public function getNext()
     {
         $this->beanStalkdClient->watch($this->sourceQueue);
+
         return $this->beanStalkdClient->reserve(0);
     }
 
@@ -51,7 +43,6 @@ class BeanStalkdQueue implements Queue
     {
         $this->beanStalkdClient->putInTube($this->failedQueue, $job->getData());
         $this->beanStalkdClient->delete($job);
-        return;
     }
 
     /**
@@ -62,12 +53,10 @@ class BeanStalkdQueue implements Queue
     {
         $this->beanStalkdClient->putInTube($this->errorQueue, $job->getData());
         $this->beanStalkdClient->delete($job);
-        return;
     }
 
     public function nothingToDo()
     {
-        return;
     }
 
     public function stopped($job)
@@ -100,5 +89,12 @@ class BeanStalkdQueue implements Queue
     public function sendJob($job)
     {
         return $this->beanStalkdClient->putInTube($this->sourceQueue, $job);
+    }
+
+    protected function setQueues($queueName)
+    {
+        $this->sourceQueue = $queueName;
+        $this->failedQueue = $queueName.'-failed';
+        $this->errorQueue  = $queueName.'-error';
     }
 }

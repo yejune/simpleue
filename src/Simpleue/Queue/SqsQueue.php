@@ -13,16 +13,19 @@ use Aws\Sqs\SqsClient;
  */
 class SqsQueue implements Queue
 {
+    public $currentJob;
     private $sqsClient;
     private $sourceQueueUrl;
     private $failedQueueUrl;
     private $errorQueueUrl;
     private $maxWaitingSeconds;
     private $visibilityTimeout;
+    private $idempotentDb;
 
-    public function __construct(SqsClient $sqsClient, $queueName, $maxWaitingSeconds = 20, $visibilityTimeout = 43200)
+    public function __construct(\Aws\Sdk $aws, $queueName, $maxWaitingSeconds = 20, $visibilityTimeout = 43200)
     {
-        $this->sqsClient         = $sqsClient;
+        $this->idempotentDb      = new SqsQueueIdempotent($aws, 'supervolt', 'messageId');
+        $this->sqsClient         = $aws->createSqs();
         $this->maxWaitingSeconds = $maxWaitingSeconds;
         $this->visibilityTimeout = $visibilityTimeout;
         $this->setQueues($queueName);
@@ -69,7 +72,6 @@ class SqsQueue implements Queue
 
         return $this;
     }
-
     public function getNext()
     {
         $queueItem = $this->sqsClient->receiveMessage([
@@ -78,8 +80,13 @@ class SqsQueue implements Queue
             'WaitTimeSeconds'     => $this->maxWaitingSeconds,
             'VisibilityTimeout'   => $this->visibilityTimeout,
         ]);
+
         if ($queueItem->hasKey('Messages')) {
-            return $queueItem->get('Messages')[0];
+            $this->currentJob = $queueItem->get('Messages')[0];
+            if (false == $this->idempotentDb->get($this->currentJob['MessageId'])) {
+                return $this->currentJob;
+            }
+            //$this->deleteMessage($this->sourceQueueUrl, $this->currentJob['ReceiptHandle'], $this->currentJob['MessageId']);
         }
 
         return false;
@@ -87,19 +94,19 @@ class SqsQueue implements Queue
 
     public function successful($job)
     {
-        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle']);
+        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle'], $job['MessageId']);
     }
 
     public function failed($job)
     {
         $this->sendMessage($this->failedQueueUrl, $job['Body']);
-        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle']);
+        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle'], $job['MessageId']);
     }
 
     public function error($job)
     {
         $this->sendMessage($this->errorQueueUrl, $job['Body']);
-        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle']);
+        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle'], $job['MessageId']);
     }
 
     public function nothingToDo()
@@ -108,7 +115,7 @@ class SqsQueue implements Queue
 
     public function stopped($job)
     {
-        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle']);
+        $this->deleteMessage($this->sourceQueueUrl, $job['ReceiptHandle'], $job['MessageId']);
     }
 
     public function getMessageBody($job)
@@ -116,14 +123,14 @@ class SqsQueue implements Queue
         return json_decode($job['Body'], true);
     }
 
-    public function toString($job)
+    public function toString($body)
     {
-        return json_encode($job);
+        return json_encode($body);
     }
 
     public function sendJob($body)
     {
-        $this->sendMessage($this->sourceQueueUrl, $body);
+        return $this->sendMessage($this->sourceQueueUrl, $body);
     }
 
     protected function setQueues($queueName)
@@ -137,8 +144,14 @@ class SqsQueue implements Queue
     {
         try {
             $queueData = $this->sqsClient->createQueue([
-                'QueueName' => $queueName,
+                'QueueName'  => $queueName,
+                'Attributes' => [
+                    'VisibilityTimeout' => $this->visibilityTimeout,
+                ],
             ]);
+            /*
+            $queueData = $this->sqsClient->getQueueUrl(['QueueName' => $queueName]);
+            */
         } catch (SqsException $ex) {
             throw $ex;
         }
@@ -146,8 +159,9 @@ class SqsQueue implements Queue
         return $queueData->get('QueueUrl');
     }
 
-    protected function deleteMessage($queueUrl, $messageReceiptHandle)
+    protected function deleteMessage($queueUrl, $messageReceiptHandle, $messageId)
     {
+        $this->idempotentDb->update($messageId, 1);
         $this->sqsClient->deleteMessage([
             'QueueUrl'      => $queueUrl,
             'ReceiptHandle' => $messageReceiptHandle,
@@ -156,7 +170,7 @@ class SqsQueue implements Queue
 
     private function sendMessage($queueUrl, $messageBody)
     {
-        $this->sqsClient->sendMessage([
+        return $this->sqsClient->sendMessage([
             'QueueUrl'    => $queueUrl,
             'MessageBody' => json_encode($messageBody),
         ]);
