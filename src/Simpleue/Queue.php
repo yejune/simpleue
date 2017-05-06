@@ -3,7 +3,7 @@
  * User: Javier Bravo
  * Date: 10/05/15
  */
-namespace Simpleue\Queue;
+namespace Simpleue;
 
 interface Queue
 {

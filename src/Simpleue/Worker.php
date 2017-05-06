@@ -3,13 +3,13 @@
  * User: Javier Bravo
  * Date: 9/01/15.
  */
-namespace Simpleue\Worker;
+namespace Simpleue;
 
-use Simpleue\Queue\Queue;
-use Simpleue\Job\Job;
+use Simpleue\Queue;
+use Simpleue\Job;
 use Psr\Log\LoggerInterface;
 
-class QueueWorker
+class Worker
 {
     protected $queueHandler;
     protected $jobHandler;

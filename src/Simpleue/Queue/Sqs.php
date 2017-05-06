@@ -11,7 +11,7 @@ use Aws\Sqs\SqsClient;
 /*
  * AWS API 3.x doc : http://docs.aws.amazon.com/aws-sdk-php/v3/api/
  */
-class SqsQueue implements Queue
+class Sqs implements Queue
 {
     public $currentJob;
     private $sqsClient;
@@ -24,7 +24,7 @@ class SqsQueue implements Queue
 
     public function __construct(\Aws\Sdk $aws, $queueName, $maxWaitingSeconds = 20, $visibilityTimeout = 43200)
     {
-        $this->idempotentDb      = new SqsQueueIdempotent($aws, 'supervolt', 'messageId');
+        $this->idempotentDb      = new Sqs\Idempotent($aws, 'supervolt', 'messageId');
         $this->sqsClient         = $aws->createSqs();
         $this->maxWaitingSeconds = $maxWaitingSeconds;
         $this->visibilityTimeout = $visibilityTimeout;

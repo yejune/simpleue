@@ -3,7 +3,7 @@ namespace Simpleue\Queue;
 
 use Aws\DynamoDb\DynamoDbClient;
 
-class SqsQueueIdempotent
+class Idempotent
 {
     /**
      * @var DynamoDbClient
