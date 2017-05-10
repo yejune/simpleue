@@ -11,7 +11,7 @@ use Aws\Sqs\SqsClient;
 /*
  * AWS API 3.x doc : http://docs.aws.amazon.com/aws-sdk-php/v3/api/
  */
-class Sqs implements Queue
+class Sqs implements \Simpleue\Queue
 {
     public $currentJob;
     private $sqsClient;

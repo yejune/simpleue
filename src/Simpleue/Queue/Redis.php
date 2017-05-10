@@ -7,7 +7,7 @@ namespace Simpleue\Queue;
 
 use Predis\Client;
 
-class Redis implements Queue
+class Redis implements \Simpleue\Queue
 {
     private $redisClient;
     private $sourceQueue;

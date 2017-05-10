@@ -9,7 +9,7 @@ use Pheanstalk\Pheanstalk;
  * @author Adeyemi Olaoye <yemexx1@gmail.com>
  * @package Simpleue\Queue
  */
-class BeanStalkd implements Queue
+class BeanStalkd implements \Simpleue\Queue
 {
     /** @var  Pheanstalk */
     private $beanStalkdClient;
