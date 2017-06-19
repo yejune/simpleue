@@ -65,7 +65,7 @@ class Worker
                 $job = $this->queueHandler->getNext();
                 $this->log('debug', 'get Next'.$this->queueHandler->toString($job));
             } catch (\Exception $exception) {
-                $this->log('error', 'Error getting data. Message: '.$exception->getMessage());
+                $this->log('error', 'Error getting data. Message: '.$exception->getMessage().' in '.$exception->getFile().' on line '.$exception->getLine());
                 $this->queueHandler->error(false, $exception);
                 continue;
             }
@@ -100,6 +100,13 @@ class Worker
 
     protected function isRunning()
     {
+        // 강제 종료
+        if (true == file_exists('/tmp/terminated')) {
+            $this->log('debug', 'Worker Terminated. Sleep 60');
+            sleep(60);
+
+            return false;
+        }
         if ($this->maxIterations > 0) {
             return $this->iterations < $this->maxIterations;
         }
@@ -122,15 +129,15 @@ class Worker
         try {
             $jobDone = $this->jobHandler->manage($this->queueHandler->getMessageBody($job));
             if ($jobDone) {
-                $this->log('debug', 'Successful Job: '.$this->queueHandler->toString($job));
+                $this->log('debug', 'Successful Job');
                 $this->queueHandler->successful($job);
             } else {
-                $this->log('debug', 'Failed Job:'.$this->queueHandler->toString($job));
+                $this->log('debug', 'Failed Job');
                 $this->queueHandler->failed($job);
             }
         } catch (\Exception $exception) {
-            $this->log('error', 'Error Managing data. Data :'.$this->queueHandler->toString($job).'. Message: '.$exception->getMessage());
-            $this->queueHandler->error($job, $exception->getMessage());
+            $this->log('error', 'Error Managing data. Data :'.$this->queueHandler->toString($job).'. Message: '.$exception->getMessage().' in '.$exception->getFile().' on line '.$exception->getLine());
+            $this->queueHandler->error($job, $exception->getMessage().' in '.$exception->getFile().' on line '.$exception->getLine());
         }
     }
 }
