@@ -17,7 +17,7 @@ class Worker
     protected $maxIterations;
     protected $logger;
 
-    public function __construct(Queue $queueHandler, Job $jobHandler, $maxIterations = false)
+    public function __construct(Queue $queueHandler, Job $jobHandler, $maxIterations = 0)
     {
         $this->queueHandler  = $queueHandler;
         $this->jobHandler    = $jobHandler;

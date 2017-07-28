@@ -13,19 +13,16 @@ use Aws\Sqs\SqsClient;
  */
 class Sqs implements \Simpleue\Queue
 {
-    public $currentJob;
     private $sqsClient;
     private $sourceQueueUrl;
     private $failedQueueUrl;
     private $errorQueueUrl;
     private $maxWaitingSeconds;
     private $visibilityTimeout;
-    private $idempotentDb;
 
-    public function __construct(\Aws\Sdk $aws, $queueName, $maxWaitingSeconds = 20, $visibilityTimeout = 43200)
+    public function __construct(SqsClient $sqsClient, $queueName, $maxWaitingSeconds = 20, $visibilityTimeout = 43200)
     {
-        $this->idempotentDb      = new Sqs\Idempotent($aws, 'supervolt', 'messageId');
-        $this->sqsClient         = $aws->createSqs();
+        $this->sqsClient         = $sqsClient;
         $this->maxWaitingSeconds = $maxWaitingSeconds;
         $this->visibilityTimeout = $visibilityTimeout;
         $this->setQueues($queueName);
@@ -82,11 +79,7 @@ class Sqs implements \Simpleue\Queue
         ]);
 
         if ($queueItem->hasKey('Messages')) {
-            $this->currentJob = $queueItem->get('Messages')[0];
-            if (false == $this->idempotentDb->get($this->currentJob['MessageId'])) {
-                return $this->currentJob;
-            }
-            //$this->deleteMessage($this->sourceQueueUrl, $this->currentJob['ReceiptHandle'], $this->currentJob['MessageId']);
+            return $queueItem->get('Messages')[0];
         }
 
         return false;
@@ -161,7 +154,6 @@ class Sqs implements \Simpleue\Queue
 
     protected function deleteMessage($queueUrl, $messageReceiptHandle, $messageId)
     {
-        $this->idempotentDb->update($messageId, 1);
         $this->sqsClient->deleteMessage([
             'QueueUrl'      => $queueUrl,
             'ReceiptHandle' => $messageReceiptHandle,
