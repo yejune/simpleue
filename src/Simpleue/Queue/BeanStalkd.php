@@ -70,7 +70,7 @@ class BeanStalkd implements \Simpleue\Queue
      */
     public function getMessageBody($job)
     {
-        return $job->getData();
+        return json_decode($job->getData(), true);
     }
 
     /**
@@ -79,7 +79,10 @@ class BeanStalkd implements \Simpleue\Queue
      */
     public function toString($job)
     {
-        return json_encode(['id' => $job->getId(), 'data' => $job->getData()]);
+        return json_encode([
+            'id'   => $job->getId(),
+            'data' => $job->getData(),
+        ]);
     }
 
     /**
@@ -93,7 +96,7 @@ class BeanStalkd implements \Simpleue\Queue
 
     protected function setQueues($queueName)
     {
-        $this->sourceQueue = $queueName;
+        $this->sourceQueue = $queueName.'-source';
         $this->failedQueue = $queueName.'-failed';
         $this->errorQueue  = $queueName.'-error';
     }
